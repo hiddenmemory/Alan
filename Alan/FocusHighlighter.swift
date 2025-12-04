@@ -104,18 +104,15 @@ class FocusHighlighter {
 }
 
 private func cocoaRect(fromAXRect axRect: CGRect) -> CGRect {
-    guard let screen = NSScreen.screens.first(where: { $0.frame.intersects(axRect) }) ?? NSScreen.main else {
-        return axRect
-    }
+    // Find the maximum Y coordinate across all screens in Cocoa space
+    // This represents the total height of the entire screen arrangement
+    // AX coordinates start from y=0 at the top of the topmost screen
+    // Cocoa coordinates start from y=0 at the bottom of the bottommost screen
+    // So we need the total height to properly flip the Y coordinate
+    let maxY = NSScreen.screens.map { $0.frame.maxY }.max() ?? 0
 
-    // AX origin is top-left; AppKit expects bottom-left.
-    // So we flip:
-    //
-    // y_appkit = screenMaxY - (y_axTop + height)
-    //
-    let screenFrame = screen.frame
     var rect = axRect
-    rect.origin.y = screenFrame.maxY - (axRect.origin.y + axRect.height)
+    rect.origin.y = maxY - (axRect.origin.y + axRect.height)
 
     return rect
 }
